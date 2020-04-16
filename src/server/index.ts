@@ -30,7 +30,7 @@ function handleError(error: any, res: Response) {
 
 async function requestListener(req: Request, res: Response) {
 
-    if ('string' == typeof req.headers.origin) {
+    /* if ('string' == typeof req.headers.origin) {
         const [scheme, domain] = req.headers.origin.split("//", 2);
         if ((domain || "").endsWith(process.env.DOMAIN)) {
             res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
@@ -45,7 +45,7 @@ async function requestListener(req: Request, res: Response) {
         }
         res.setHeader('Access-Control-Max-Age', 60 * 60 * 60 * 30);
         return res.code(204, false); // no content
-    }
+    } */
     //res.setHeader('Access-Control-Allow-Origin', '*');
 
     // Roter handler

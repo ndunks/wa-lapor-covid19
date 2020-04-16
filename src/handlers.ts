@@ -46,7 +46,7 @@ router.add({
 })
 router.add({
     method: 'GET',
-    path: 'send',
+    path: '/send',
     requireSecret: true,
     handler(req, res){
         req.params

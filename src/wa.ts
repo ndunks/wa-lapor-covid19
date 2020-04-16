@@ -3,7 +3,7 @@ import { Whatsapp, SocketState } from "sulla";
 import { CreateConfig } from "sulla/dist/config/create-config";
 import { initWhatsapp, injectApi } from "sulla/dist/controllers/browser";
 import { isAuthenticated, retrieveQR } from "sulla/dist/controllers/auth";
-import { RetrieverLayer } from "sulla/dist/api/layers/retriever.layer";
+
 export let STATE: 'starting' | 'need_login' | 'logged_in' | SocketState = 'starting'
 export let waPage: Page = null
 export let client: Whatsapp = null
@@ -23,12 +23,7 @@ initWhatsapp('.data', options).then(
             waPage = page
             STATE = authed ? 'logged_in' : 'need_login'
             if (!authed) {
-                try {
-                    await isInsideChat()
-                } catch (error) {
-                    logger('Fail wait inside chat')
-                    process.exit(1)
-                }
+                await isInsideChat()
                 logger("Ok, got inside chat")
             }
             return injectApi(waPage).then(
@@ -72,13 +67,17 @@ export function setupListeners(client: Whatsapp) {
 }
 
 export function isInsideChat() {
-    waPage.waitForFunction(`
-    document.getElementsByClassName('app')[0] &&
-    document.getElementsByClassName('app')[0].attributes &&
-    !!document.getElementsByClassName('app')[0].attributes.tabindex
-    `,
+    return waPage.waitForFunction(
+        `document.getElementsByClassName('app')[0] &&
+        document.getElementsByClassName('app')[0].attributes &&
+        !!document.getElementsByClassName('app')[0].attributes.tabindex`,
         {
-            timeout: 10,
-        }).then(() => true).catch(e => isInsideChat())
+            timeout: 0,
+        }).then(() => true)
+        .catch(e => {
+            logger("Error waiting.. retry..")
+            return isInsideChat()
+        })
+
 }
 
