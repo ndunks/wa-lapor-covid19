@@ -2,7 +2,7 @@ import { Page } from "puppeteer";
 import { Whatsapp, SocketState } from "sulla";
 import { CreateConfig } from "sulla/dist/config/create-config";
 import { initWhatsapp, injectApi } from "sulla/dist/controllers/browser";
-import { isAuthenticated, retrieveQR } from "sulla/dist/controllers/auth";
+import { isAuthenticated } from "sulla/dist/controllers/auth";
 
 export let STATE: 'starting' | 'need_login' | 'logged_in' | SocketState = 'starting'
 export let waPage: Page = null
@@ -35,6 +35,7 @@ initWhatsapp('.data', options).then(
         }
     )
 )
+
 let conflictWaitTimers = null
 
 function conflictWaiters() {
@@ -50,12 +51,17 @@ function conflictWaiters() {
 }
 
 export function setupListeners(client: Whatsapp) {
+    const conflicts = [
+        SocketState.CONFLICT,
+        SocketState.UNPAIRED,
+        SocketState.UNLAUNCHED,
+    ];
     client.onStateChange(
         state => {
             logger('State change', state);
-            if (state == SocketState.CONFLICT) {
+            if (conflicts.includes(state)) {
                 // wait and retry
-                conflictWaitTimers = setTimeout(conflictWaiters, 1000 * 20)
+                conflictWaitTimers = setTimeout(conflictWaiters, 1000 * 2)
             } else if (conflictWaitTimers) {
                 clearTimeout(conflictWaitTimers)
             }

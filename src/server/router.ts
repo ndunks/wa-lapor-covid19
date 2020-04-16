@@ -12,6 +12,7 @@ export interface HandlerModule/*  extends OpenAPIV3.OperationObject  */ {
     path: string
     handler: HandlerFunction
     requireSecret?: boolean
+    requireWhatsapp?: boolean
 }
 
 export type HandlerFunction = (
@@ -191,7 +192,7 @@ export class Router {
 
     find(req: Request, path?: string, currentNode?: PathNode, paramIndex = 0, params = []): HandlerModule | void {
         currentNode = currentNode || this.tree; // Current node as root
-        path = path === undefined ? req.url.replace(/\/+$/, '') : path;
+        path = path === undefined ? req.path.replace(/\/+$/, '') : path;
         const pathLength = path.length;
         const prefix = currentNode.prefix;
         let i, tmpLength = 0, max, c, preSearch, result;

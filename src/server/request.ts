@@ -12,7 +12,8 @@ export default class Request<T extends any = object> extends IncomingMessage {
     body: T;
     bodyRaw: Buffer
     bodySize = 0;
-
+    path: string;
+    
     /** Get client real IP Address */
     ip() {
         const ip: any = {

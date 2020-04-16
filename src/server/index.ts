@@ -1,7 +1,10 @@
 import * as http from "http";
+import * as url from "url";
 import { Router } from "./router";
 import Response from "./response";
 import Request from "./request";
+import { STATE, client } from "../wa";
+import { SocketState } from "sulla";
 
 
 let router: Router = null
@@ -19,13 +22,22 @@ function handleError(error: any, res: Response) {
     } else {
         res.statusCode = 500;
     }
-    if (logger && error instanceof Error) {
-        const send = Object.create(null);
-        Object.getOwnPropertyNames(error).forEach(f => send[f] = error[f]);
-        res.send(send)
+    let send;
+    if (error instanceof Error) {
+        if (process.env.DEBUG) {
+            send = Object.create(null)
+            Object.getOwnPropertyNames(error).forEach(f => send[f] = error[f]);
+        } else {
+            send = {
+                code: error['code'] || 0,
+                message: error.message
+            }
+        }
     } else {
-        res.end()
+        send = error
     }
+    res.send(send)
+
 }
 
 async function requestListener(req: Request, res: Response) {
@@ -47,10 +59,16 @@ async function requestListener(req: Request, res: Response) {
         return res.code(204, false); // no content
     } */
     //res.setHeader('Access-Control-Allow-Origin', '*');
-
+    if (req.url.indexOf('?', 1) > 0) {
+        const parsed = url.parse(req.url, true)
+        req.path = parsed.pathname
+        req.params = parsed.query as any
+    } else {
+        req.path = req.url
+    }
     // Roter handler
     const handlerModule = router.find(req);
-    logger('Req', req.method, req.url);
+    logger('Req', req.method, req.path, req.params);
     if (!handlerModule) {
         return res.code(404);
     }
@@ -58,6 +76,14 @@ async function requestListener(req: Request, res: Response) {
         if (!req.params.p || req.params.p != process.env.SECRET) {
             logger('Invalid Secret:', req.params.p)
             return res.code(403);
+        }
+    }
+
+    if (handlerModule.requireWhatsapp) {
+        if (STATE != 'logged_in') {
+            return handleError(new ApiError("Sistem belum siap", 406), res);
+        } else if (await client.getConnectionState() != SocketState.CONNECTED) {
+            return handleError(new ApiError("Sistem belum terhubung", 406), res);
         }
     }
 
