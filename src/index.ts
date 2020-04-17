@@ -7,7 +7,7 @@ import './utils/api-error';
 import router from "./handlers";
 import { listen } from "./server";
 import { join } from "path";
-import { db_init } from "./db";
+import { db_init, dbs } from "./db";
 
 if (!dotenv().parsed && !dotenv({ path: '../.env' }).parsed) {
     // Default config

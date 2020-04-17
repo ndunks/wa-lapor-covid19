@@ -3,7 +3,7 @@ import { resolve, join } from "path";
 import { existsSync, mkdirSync, readdirSync } from "fs";
 import { Router } from "./server/router";
 import { Request } from "./server";
-export const dbs: { [name: string]: Datastore } = Object.create(null);
+const dbs: { [name: string]: Datastore } = Object.create(null);
 
 function requestFindHandler(this: Datastore, req: Request, res: Response) {
     return new Promise(async (resolve, reject) => {
@@ -15,16 +15,15 @@ function requestFindHandler(this: Datastore, req: Request, res: Response) {
     });
 }
 
-export function db_init(router: Router) {
+async function db_init(router: Router) {
     if (!existsSync(process.env.DB)) {
         logger('DB Mkdir', process.env.DB)
         mkdirSync(process.env.DB)
     }
 
     return Promise.all(
-        [
-            () => {
-                const name = 'person'
+        ['person'].map(
+            name => {
                 const filename = join(process.env.DB, `${name}.db`);
                 return new Promise((resolve, reject) => {
                     const db = new Datastore({
@@ -41,6 +40,8 @@ export function db_init(router: Router) {
                     })
                 })
             }
-        ]
+        )
     )
 }
+
+export { dbs, db_init }

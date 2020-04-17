@@ -1,13 +1,33 @@
 import { Page } from "puppeteer";
-import { Whatsapp, SocketState } from "sulla";
+import { Whatsapp, SocketState, PartialMessage, Message } from "sulla";
 import { CreateConfig } from "sulla/dist/config/create-config";
 import { initWhatsapp, injectApi } from "sulla/dist/controllers/browser";
 import { isAuthenticated } from "sulla/dist/controllers/auth";
+import * as fs from "fs";
+import * as path from "path";
 
-export let STATE: 'starting' | 'need_login' | 'logged_in' | SocketState = 'starting'
-export let waPage: Page = null
-export let client: Whatsapp = null
 
+let STATE: 'starting' | 'need_login' | 'logged_in' | SocketState = 'starting'
+let waPage: Page = null
+let client: Whatsapp = null
+interface MessageHandler {
+    name: string
+    matcher: RegExp | ((msg: PartialMessage) => boolean)
+    info: string
+    format: string
+    contoh?: string
+    hidden?: boolean
+    reply(msg: PartialMessage | Message, client: Whatsapp): Promise<any>
+}
+
+const wa_handlers: MessageHandler[] = []
+const handlerPath = path.join(__dirname, 'wa-handler')
+fs.readdirSync(handlerPath).forEach(
+    f => {
+        wa_handlers.push(require(path.join(handlerPath, f)).default)
+    }
+)
+logger("Wa Handler:", wa_handlers.map(v => v.name))
 const options: CreateConfig = {
     headless: true,
     devtools: false,
@@ -16,6 +36,62 @@ const options: CreateConfig = {
     logQR: false,
     browserArgs: ['--no-sandbox'],
     refreshQR: 30000,
+}
+
+function processMessage(msg: PartialMessage | Message): Promise<any> {
+
+    if (msg.type != 'chat' || msg['isMedia']) {
+        logger("Ignore message from", msg.from, msg.type)
+        return;
+    }
+    const handler = wa_handlers.find(
+        v => v.matcher instanceof RegExp ?
+            v.matcher.test(msg.body) : v.matcher(msg as PartialMessage)
+    )
+
+    if (handler) {
+        logger('Process handler', msg.from, handler.matcher)
+        try {
+            return handler.reply(msg, client)
+        } catch (error) {
+            if (typeof error == 'string') {
+                return client.sendText(msg.from, error)
+            } else {
+                return client.sendText(msg.from, 'Mohon maaf, terjadi kesalahan di sistem kami.')
+            }
+
+        }
+    } else {
+        let replyMessage = ''
+        if (msg.body.length < 30) {
+            replyMessage += `Perintah '_${msg.body}_' tidak dikenali. `
+        }
+        replyMessage += 'Berikut pesan perintah yang kami kenali:\n'
+        wa_handlers.filter(h => !h.hidden).forEach(
+            h => {
+                replyMessage += `*${h.name}*\n_${h.info}_\n`
+            }
+        )
+
+        return client.sendText(msg.from, replyMessage)
+    }
+    //const msgFirstWord = msg.type
+}
+
+function replyUndread() {
+    client.getAllChatsWithMessages(true).then(
+        async chats => {
+            logger("getAllChatsWithMessages", chats.length)
+            for (let c of chats) {
+                if (Array.isArray(c.msgs)) {
+                    const msgs = c.msgs as PartialMessage[]
+                    const lastMsg: PartialMessage = msgs[msgs.length - 1]
+                    await processMessage(lastMsg)
+                }
+
+            }
+        }
+    )
 }
 initWhatsapp('.data', options).then(
     page => isAuthenticated(page).then(
@@ -30,11 +106,24 @@ initWhatsapp('.data', options).then(
                 waPage => {
                     client = new Whatsapp(waPage)
                     setupListeners(client)
+                    return replyUndread()
                 }
             )
         }
     )
+).then(
+    () => logger('WhatsApp Server Siap')
 )
+
+const fields = {
+    'nik': ['no ktp', 'no identitas', 'nomor ktp'],
+    'nama': ['nama lengkap'],
+    'asal_kedatangan': ['asal'],
+    'tgl_kedatangan': [''],
+    'alamat_di_datangi': ['alamat'],
+    'nomor_hp': ['no', 'nomor'],
+    'kejala': []
+}
 
 let conflictWaitTimers = null
 
@@ -50,7 +139,7 @@ function conflictWaiters() {
     })
 }
 
-export function setupListeners(client: Whatsapp) {
+function setupListeners(client: Whatsapp) {
     const conflicts = [
         SocketState.CONFLICT,
         SocketState.UNPAIRED,
@@ -67,12 +156,10 @@ export function setupListeners(client: Whatsapp) {
             }
         }
     )
-    client.onMessage((message) => {
-        client.sendText(message.from, '👋' + message.body);
-    });
+    client.onMessage(message => processMessage(message));
 }
 
-export function isInsideChat() {
+function isInsideChat() {
     return waPage.waitForFunction(
         `document.getElementsByClassName('app')[0] &&
         document.getElementsByClassName('app')[0].attributes &&
@@ -87,3 +174,12 @@ export function isInsideChat() {
 
 }
 
+export {
+    STATE,
+    waPage,
+    client,
+    MessageHandler,
+    setupListeners,
+    isInsideChat,
+    wa_handlers
+}
