@@ -6,15 +6,22 @@ import './utils/logger';
 import './utils/api-error';
 import router from "./handlers";
 import { listen } from "./server";
+import { join } from "path";
+import { db_init } from "./db";
 
 if (!dotenv().parsed && !dotenv({ path: '../.env' }).parsed) {
     // Default config
     Object.assign(process.env, {
         PORT: 1555,
         LISTEN: '0.0.0.0',
-        SECRET: 'KlpWaServer'
+        SECRET: 'KlpWaServer',
+        DB: join(process.cwd(), '.db')
     })
 }
 
-logger('Starting server', `${process.env.LISTEN}:${process.env.PORT}`, process.env.SECRET);
-listen(process.env.LISTEN, parseInt(process.env.PORT), router);
+db_init(router).then(
+    () => {
+        logger('Starting server', `${process.env.LISTEN}:${process.env.PORT}`, process.env.SECRET);
+        listen(process.env.LISTEN, parseInt(process.env.PORT), router);
+    }
+)
