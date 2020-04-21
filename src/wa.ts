@@ -151,7 +151,9 @@ function setupListeners(client: Whatsapp) {
             if (conflicts.includes(state)) {
                 // wait and retry
                 conflictWaitTimers = setTimeout(conflictWaiters, 1000 * 2)
+                STATE = 'need_login'
             } else if (conflictWaitTimers) {
+                STATE = 'logged_in'
                 clearTimeout(conflictWaitTimers)
             }
         }
