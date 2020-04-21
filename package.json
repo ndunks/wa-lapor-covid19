@@ -5,12 +5,13 @@
   "license": "MIT",
   "scripts": {
     "dev": "nodemon --delay 300ms -w dist dist/index.js --debug",
-    "build": "tsc"
+    "build": "tsc",
+    "deploy": "./deploy.sh"
   },
   "dependencies": {
     "dotenv": "^8.2.0",
     "nedb": "^1.8.0",
-    "sulla": "^2.3.14",
+    "sulla": "^2.3.14"
   },
   "devDependencies": {
     "@types/nedb": "^1.8.9",
