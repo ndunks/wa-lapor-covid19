@@ -38,7 +38,7 @@ const options: CreateConfig = {
     refreshQR: 30000,
 }
 
-function findHandler(msg){
+function findHandler(msg) {
     const firstLine = (msg || "").split(/\s/, 2)[0]
         .replace(/^[\`\*_]+/g, '');
     return wa_handlers.find(
@@ -71,7 +71,7 @@ function processMessage(msg: PartialMessage | Message): Promise<any> {
         if (msg.body.length < 30) {
             replyMessage += `Perintah '_${msg.body}_' tidak dikenali. `
         }
-        replyMessage += 'untuk cara melaporkan pendatang, silahkan ketik: ```help lapor```.\n'
+        replyMessage += 'untuk cara melaporkan pendatang, silahkan ketik: ```help lapor```.\nWebsite: http://klampok.id\n'
         return client.sendText(msg.from, replyMessage)
     }
     //const msgFirstWord = msg.type

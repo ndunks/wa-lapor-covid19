@@ -1,11 +1,44 @@
 import { MessageHandler } from "../wa";
 import { dbs } from "../db";
+interface LaporData {
+    nama: string,
+    nik?: string,
+    umur?: string,
+    rt?: string,
+    rw?: string,
+    dusun?: string,
+    asal_kota?: string,
+    tgl_kepulangan?: string,
+    keluhan?: string,
+    no_hp?: string,
+    wa_sent?: string,
+    pelapor?: string,
+    keterangan?: string
+}
+const aliases = {
+    asal_kota: ['asal', 'asal_kedatangan', 'kota'],
+    no_hp: ['no', 'tel', 'tlp', 'no_wa', 'no_telp', 'telepon', 'nomor hp',
+        'nomor telepon', 'kontak'],
+    nik: ['no_ktp', 'nomor_ktp', 'kitas', 'no_kitas', 'ktp', 'nomor_identitas'],
+    nama: ['nama_lengkap'],
+    keluhan: ['kondisi', 'gejala', 'kesehatan', 'masalah'],
+    tgl_kepulangan: ['tgl_pulang', 'tanggal_pulang', 'tanggal_kembali', 'tgl_datang',
+        'waktu_kedatangan', 'kedatangan'],
+    keterangan: ['ket', 'ket_tambahan', 'tambahan']
+}
 const lapor_handler: MessageHandler = {
     name: 'lapor',
-    matcher: /^lapor/i,
-    info: 'Melaporkan pendatang baru, yang anda ketahui',
-    format: `lapor\nNIK:\nNama: \nTgl Kedatangan: \nAsal: \nAlamat Kedatangan: \n` +
-        ``,
+    matcher: /^lapo+r/i,
+    info: 'Melaporkan pendatang baru, yang anda ketahui. ketik ```help lapor``` untuk bantuan',
+    format: `LAPOR
+NIK:
+Nama:
+No Hp:
+Asal Kota:
+Tgl Kedatangan:
+RT/RW Kedatangan:
+Keluhan:
+Keterangan:`,
     reply(msg, client) {
         const lines = msg.body.split(/[\r\n]+/);
         // first line is lapor
