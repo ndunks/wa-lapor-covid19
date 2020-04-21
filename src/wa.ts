@@ -14,7 +14,7 @@ interface MessageHandler {
     name: string
     matcher: RegExp | ((msg: PartialMessage) => boolean)
     info: string
-    format: string
+    format?: string
     contoh?: string
     hidden?: boolean
     reply(msg: PartialMessage | Message, client: Whatsapp): Promise<any>
@@ -38,19 +38,24 @@ const options: CreateConfig = {
     refreshQR: 30000,
 }
 
+function findHandler(msg){
+    const firstLine = (msg || "").split(/\s/, 2)[0]
+        .replace(/^[\`\*_]+/g, '');
+    return wa_handlers.find(
+        v => v.matcher instanceof RegExp ?
+            v.matcher.test(firstLine) : v.matcher(msg as PartialMessage)
+    )
+}
+
 function processMessage(msg: PartialMessage | Message): Promise<any> {
 
     if (msg.type != 'chat' || msg['isMedia']) {
         logger("Ignore message from", msg.from, msg.type)
         return;
     }
-    const handler = wa_handlers.find(
-        v => v.matcher instanceof RegExp ?
-            v.matcher.test(msg.body) : v.matcher(msg as PartialMessage)
-    )
+    const handler = findHandler(msg.body)
 
     if (handler) {
-        logger('Process handler', msg.from, handler.matcher)
         try {
             return handler.reply(msg, client)
         } catch (error) {
@@ -66,13 +71,7 @@ function processMessage(msg: PartialMessage | Message): Promise<any> {
         if (msg.body.length < 30) {
             replyMessage += `Perintah '_${msg.body}_' tidak dikenali. `
         }
-        replyMessage += 'Berikut pesan perintah yang kami kenali:\n'
-        wa_handlers.filter(h => !h.hidden).forEach(
-            h => {
-                replyMessage += `*${h.name}*\n_${h.info}_\n`
-            }
-        )
-
+        replyMessage += 'untuk cara melaporkan pendatang, silahkan ketik: ```help lapor```.\n'
         return client.sendText(msg.from, replyMessage)
     }
     //const msgFirstWord = msg.type
@@ -183,5 +182,6 @@ export {
     MessageHandler,
     setupListeners,
     isInsideChat,
-    wa_handlers
+    wa_handlers,
+    findHandler
 }
