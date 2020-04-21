@@ -38,6 +38,9 @@ class WebApi {
     status() {
         return this.do('status')
     }
+    lapor(data) {
+        return this.req({ do: 'lapor' }, "POST", data)
+    }
 }
 const web_api = new WebApi(process.env.WEB_API_URL, process.env.WEB_API_KEY);
 export default web_api;

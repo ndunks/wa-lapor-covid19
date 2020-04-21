@@ -71,7 +71,7 @@ function processMessage(msg: PartialMessage | Message): Promise<any> {
         if (msg.body.length < 30) {
             replyMessage += `Perintah '_${msg.body}_' tidak dikenali. `
         }
-        replyMessage += 'untuk cara melaporkan pendatang, silahkan ketik: ```help lapor```.\nWebsite: http://klampok.id\n'
+        replyMessage += 'untuk melaporkan pendatang, silahkan balas dengan ketik: ```help lapor```'
         return client.sendText(msg.from, replyMessage)
     }
     //const msgFirstWord = msg.type

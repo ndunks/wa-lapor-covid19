@@ -13,8 +13,7 @@ Object.assign(process.env, {
     SECRET: 'KlpWaServer',
     DB: join(process.cwd(), '.db')
 })
-
-logger('.env', dotenv().parsed || dotenv({ path: '../.env' }));
+logger('.env', dotenv().parsed || dotenv({ path: '../.env' }).parsed);
 
 import router from "./handlers";
 import { listen } from "./server";
