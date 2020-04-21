@@ -12,5 +12,9 @@ declare namespace NodeJS {
         PORT: string
         /** API Secret */
         SECRET: string
+        /** WEB API URL */
+        WEB_API_URL: string
+        /** WEB API Key */
+        WEB_API_KEY: string
     }
 }

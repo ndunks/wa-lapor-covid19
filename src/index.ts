@@ -1,14 +1,10 @@
 
-process.env.DEBUG = process.env.DEBUG || ((process.argv.findIndex(v => v == '--debug') >= 0) ? '1' : null);
-
+import { join } from "path";
+import * as fs from "fs"
 import { config as dotenv } from "dotenv";
+process.env.DEBUG = process.env.DEBUG || ((process.argv.findIndex(v => v == '--debug') >= 0) ? '1' : null);
 import './utils/logger';
 import './utils/api-error';
-import router from "./handlers";
-import { listen } from "./server";
-import { join } from "path";
-import { db_init, dbs } from "./db";
-import * as fs from "fs"
 
 // Default config
 Object.assign(process.env, {
@@ -18,8 +14,13 @@ Object.assign(process.env, {
     DB: join(process.cwd(), '.db')
 })
 
-dotenv().parsed || dotenv({ path: '../.env' });
-fs.writeFileSync(".pid",process.pid)
+logger('.env', dotenv().parsed || dotenv({ path: '../.env' }));
+
+import router from "./handlers";
+import { listen } from "./server";
+import { db_init, dbs } from "./db";
+
+fs.writeFileSync(".pid", process.pid)
 
 
 db_init(router).then(

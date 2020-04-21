@@ -2,7 +2,7 @@ import { MessageHandler, wa_handlers } from "../wa";
 const format_handler: MessageHandler = {
     name: 'format',
     matcher: /^format/i,
-    info: 'Infomasi tentang format perintah tertentu',
+    info: 'Infomasi tentang format perintah tertentu, _Contoh_:format lapor',
     format: `format _(nama perintah)_`,
     async reply(msg, client) {
         const cmd = msg.body.split(/\s+/, 2);

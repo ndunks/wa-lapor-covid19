@@ -1,5 +1,6 @@
 import { Router } from "./server/router";
 import { STATE, waPage, client } from "./wa";
+import web_api from "./web_api";
 
 // Setup router
 const router = new Router();
@@ -59,6 +60,14 @@ router.add({
         )
     }
 })
+
+router.add({
+    method: 'GET',
+    path: '/env',
+    requireSecret: true,
+    handler: () => process.env
+})
+
 router.add({
     method: 'GET',
     path: '/profile',
@@ -88,5 +97,10 @@ router.add({
         }
 
     }
+})
+router.add({
+    method: 'GET',
+    path: '/web_api',
+    handler: () => web_api.status()
 })
 export default router
