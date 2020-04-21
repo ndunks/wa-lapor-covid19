@@ -8,16 +8,19 @@ import router from "./handlers";
 import { listen } from "./server";
 import { join } from "path";
 import { db_init, dbs } from "./db";
+import * as fs from "fs"
 
-if (!dotenv().parsed && !dotenv({ path: '../.env' }).parsed) {
-    // Default config
-    Object.assign(process.env, {
-        PORT: 1555,
-        LISTEN: '0.0.0.0',
-        SECRET: 'KlpWaServer',
-        DB: join(process.cwd(), '.db')
-    })
-}
+// Default config
+Object.assign(process.env, {
+    PORT: 1555,
+    LISTEN: '0.0.0.0',
+    SECRET: 'KlpWaServer',
+    DB: join(process.cwd(), '.db')
+})
+
+dotenv().parsed || dotenv({ path: '../.env' });
+fs.writeFileSync(".pid",process.pid)
+
 
 db_init(router).then(
     () => {

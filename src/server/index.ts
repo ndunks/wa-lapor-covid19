@@ -114,9 +114,8 @@ function listen(host: string, port?: number, routerSource?: Router): http.Server
     router = routerSource
     return http.createServer({
         IncomingMessage: Request,
-        ServerResponse: Response,
-
-    }, requestListener).listen(port);
+        ServerResponse: Response
+    }, requestListener).listen(port, host);
 }
 
 export { listen, Response, Request, requestListener }
