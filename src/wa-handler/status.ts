@@ -7,10 +7,14 @@ const status_handler: MessageHandler = {
     info: `Menampilkan status jumlah pendatang di desa Klampok`,
     reply: (msg, client) => web_api.status().then(
         (status: { last_update: string, summary: { [dusun: string]: number } }) => {
+            let total = 0;
             let reply = Object.keys(status.summary).map(
-                v => `${v}\t*${status.summary[v]} Orang*`
+                v => {
+                    total += status.summary[v];
+                    return `${v}\t*${status.summary[v]} Orang*`
+                }
             ).join("\n");
-            reply += `\n_Laporan Terakhir: ${status.last_update}_`
+            reply += `\n*TOTAL ${total}*\n_Laporan Terakhir: ${status.last_update}_`
             client.sendText(msg.from, reply);
         }
     )
