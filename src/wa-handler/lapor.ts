@@ -50,6 +50,26 @@ const rtrw_matcher = [
     /rt\s*(\d+)\s*rw\s*(\d+)/i, // rt 03 rw 11
     /rt.(\d+).rw.(\d+)/i // rt*03*rw*11
 ]
+const bulan = ['ja', 'fe', 'ma', 'ap', 'me', 'jun', 'jul', 'ag', 'se', 'ok', 'no', 'de'];
+
+function tgl_parser(tgl: string) {
+    let tmp: string[];
+    //22 April 2020
+    if ((tmp = tgl.match(/^(\d{1,2})[\/\s.]+([\w]+)[\/\s]+(\d{2,4})$/))) {
+        if (tmp[3].length <= 2) {
+            tmp[3] = "20" + tmp[3]
+        }
+        if (isNaN(tmp[2] as any)) {
+            tmp[2] = tmp[2].trim().toLowerCase()
+            let idx = bulan.findIndex(v => tmp[2].indexOf(v) === 0)
+            if (idx >= 0) {
+                tmp[2] = `${idx + 1}`
+            }
+        }
+        return `${tmp[3]}-${tmp[2]}-${tmp[1]}`
+    }
+    return tgl;
+}
 const lapor_handler: MessageHandler = {
     name: 'lapor',
     matcher: /^lapo+r/i,
@@ -127,6 +147,9 @@ Keterangan: `,
                 }
             }
         }
+        if (data.tgl_kepulangan) {
+            data.tgl_kepulangan = tgl_parser(data.tgl_kepulangan);
+        }
         data.raw = msg.body
         data.pelapor = msg.from
         if (data.no_hp) {
@@ -144,7 +167,6 @@ Keterangan: `,
         let nama_pelapor = await client.getContact(msg.from).then(
             v => v && v.pushname
         )
-        logger('SEND WEB API', data)
         await web_api.lapor(data).then(
             (res) => {
                 logger('Api response', res)
