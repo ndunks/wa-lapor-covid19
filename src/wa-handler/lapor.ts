@@ -47,7 +47,8 @@ Object.keys(aliases).forEach(
 const rtrw_matcher = [
     /(\d+)\/(\d+)/, // 03/11
     /rt\s+(\d+)\s+(\d+)/i, // rt 03/11
-    /rt\s*(\d+)\s*rw\s*(\d+)/i // rt 03 rw 11
+    /rt\s*(\d+)\s*rw\s*(\d+)/i, // rt 03 rw 11
+    /rt.(\d+).rw.(\d+)/i // rt*03*rw*11
 ]
 const lapor_handler: MessageHandler = {
     name: 'lapor',
