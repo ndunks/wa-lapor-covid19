@@ -116,8 +116,8 @@ Keterangan: `,
 
                 for (let rs of rtrw_matcher) {
                     if ((tmpa = data.rt_rw.match(rs))) {
-                        data.rt = tmpa[0]
-                        data.rw = tmpa[1]
+                        data.rt = tmpa[1]
+                        data.rw = tmpa[2]
                         break;
                     }
                 }
