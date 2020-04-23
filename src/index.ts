@@ -18,6 +18,7 @@ logger('.env', dotenv().parsed || dotenv({ path: '../.env' }).parsed);
 import router from "./handlers";
 import { listen } from "./server";
 import { db_init, dbs } from "./db";
+import { waPage } from "./wa";
 
 fs.writeFileSync(".pid", process.pid)
 
@@ -28,3 +29,12 @@ db_init(router).then(
         listen(process.env.LISTEN, parseInt(process.env.PORT), router);
     }
 )
+process.on('SIGTERM', async () => {
+    logger('Closing due SIGTERM')
+    if (waPage) {
+        try {
+            await waPage.close()
+        } catch (error) { }
+    }
+    process.exit(0)
+});
