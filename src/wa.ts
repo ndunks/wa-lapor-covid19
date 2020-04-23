@@ -34,7 +34,7 @@ const options: CreateConfig = {
     useChrome: false,
     debug: false,
     logQR: false,
-    browserArgs: ['--no-sandbox'],
+    browserArgs: ['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage'],
     refreshQR: 30000,
 }
 
