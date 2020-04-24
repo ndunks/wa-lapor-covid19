@@ -5,3 +5,4 @@ dist
 .pid
 *.log
 *.sh
+.env
