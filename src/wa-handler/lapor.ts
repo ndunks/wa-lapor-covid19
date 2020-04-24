@@ -34,7 +34,7 @@ const aliases: { [key: string]: string[] } = {
     nik: ['no_ktp', 'nomor_ktp', 'kitas', 'no_kitas', 'ktp', 'nomor_identitas'],
     nama: ['nama_lengkap'],
     keluhan: ['kondisi', 'gejala', 'kesehatan', 'masalah'],
-    tgl_kepulangan: ['tgl_pulang', 'tanggal_pulang', 'tanggal_kembali', 'tgl_datang',
+    tgl_kepulangan: ['tgl_kedatangan', 'tgl_pulang', 'tanggal_pulang', 'tanggal_kembali', 'tgl_datang',
         'waktu_kedatangan', 'kedatangan'],
     keterangan: ['ket', 'ket_tambahan', 'tambahan'],
     rt_rw: ['rt_rw_kedatangan', 'rtrw_kedatangan']
@@ -51,22 +51,29 @@ const rtrw_matcher = [
     /rt.(\d+).rw.(\d+)/i // rt*03*rw*11
 ]
 const bulan = ['ja', 'fe', 'ma', 'ap', 'me', 'jun', 'jul', 'ag', 'se', 'ok', 'no', 'de'];
-
 function tgl_parser(tgl: string) {
     let tmp: string[];
-    //22 April 2020
-    if ((tmp = tgl.match(/^(\d{1,2})[\/\s.]+([\w]+)[\/\s]+(\d{2,4})$/))) {
-        if (tmp[3].length <= 2) {
-            tmp[3] = "20" + tmp[3]
+    //22 april (Tanpa tahun)
+    if ((tmp = tgl.match(/^(\d{1,2})[\/\s.]+([\w]+)$/))) {
+        tmp = [new Date().getFullYear().toString(), tmp[2], tmp[1]];
+    } else {
+        //22 April 2020
+        if ((tmp = tgl.match(/^(\d{1,2})[\/\s.]+([\w]+)[\/\s]+(\d{2,4})$/))) {
+            if (tmp[3].length <= 2) {
+                tmp[3] = "20" + tmp[3]
+            }
+            tmp = [tmp[3], tmp[2], tmp[1]];
         }
-        if (isNaN(tmp[2] as any)) {
-            tmp[2] = tmp[2].trim().toLowerCase()
-            let idx = bulan.findIndex(v => tmp[2].indexOf(v) === 0)
+    }
+    if (tmp && tmp.length == 3) {
+        if (isNaN(tmp[1] as any)) {
+            tmp[1] = tmp[1].trim().toLowerCase()
+            let idx = bulan.findIndex(v => tmp[1].indexOf(v) === 0)
             if (idx >= 0) {
-                tmp[2] = `${idx + 1}`
+                tmp[1] = `${idx + 1}`
             }
         }
-        return `${tmp[3]}-${tmp[2]}-${tmp[1]}`
+        return tmp.join('-')
     }
     return tgl;
 }
@@ -79,8 +86,8 @@ NIK:
 Nama: 
 No Hp: 
 Asal Kota: 
-Tgl Kedatangan: 
-RT/RW Kedatangan: 
+Tgl Kedatangan: tgl bln thn
+RT/RW Kedatangan: RT 00 RW 00
 Keluhan: 
 Keterangan: `,
     async reply(msg, client) {
@@ -120,7 +127,9 @@ Keterangan: `,
         })
 
         if (keys.length == 0) {
-            return client.sendText(msg.from, 'Mohon maaf, *data kurang lengkap*')
+            return client.sendText(
+                msg.from, 'Mohon maaf, *data kurang lengkap*.\nSilahkan di copy-paste, diisi, lalu kirim balik format berikut:'
+            ).then(() => client.sendText(msg.from, lapor_handler.format))
         }
 
         if (!data.nama) {
@@ -158,15 +167,16 @@ Keterangan: `,
                 logger('No hp invalid:', nohp)
             } else {
                 data.no_hp = nohp;
-                logger('Sending himbauan to', nohp)
-                if (await client.sendText(`${nohp}@c.us`, pesan_himbauan.replace('%nama%', data.nama))) {
-                    data.wa_sent = 'true'
-                }
+                /*                 logger('Sending himbauan to', nohp)
+                                if (await client.sendText(`${nohp}@c.us`, pesan_himbauan.replace('%nama%', data.nama))) {
+                                    data.wa_sent = 'true'
+                                } */
             }
         }
         let nama_pelapor = await client.getContact(msg.from).then(
             v => v && v.pushname
         )
+        logger('Send Api', data)
         await web_api.lapor(data).then(
             (res) => {
                 logger('Api response', res)

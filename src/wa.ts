@@ -39,7 +39,7 @@ const options: CreateConfig = {
 }
 
 function findHandler(msg) {
-    const firstLine = (msg || "").split(/\s/, 2)[0]
+    const firstLine = (msg || "").trim().split(/\s/, 2)[0]
         .replace(/^[\`\*_]+/g, '');
     return wa_handlers.find(
         v => v.matcher instanceof RegExp ?
@@ -71,7 +71,7 @@ function processMessage(msg: PartialMessage | Message): Promise<any> {
         if (msg.body.length < 30) {
             replyMessage += `Perintah '_${msg.body}_' tidak dikenali. `
         }
-        replyMessage += 'untuk melaporkan pendatang, silahkan balas dengan ketik: ```help lapor```'
+        replyMessage += 'untuk melaporkan pendatang, silahkan balas dengan ketik: ```lapor```. Ketikan ```status``` untuk melihat total laporan pendatang.'
         return client.sendText(msg.from, replyMessage)
     }
     //const msgFirstWord = msg.type

@@ -50,12 +50,23 @@ router.add({
     path: '/send',
     requireSecret: true,
     requireWhatsapp: true,
-    handler(req, res) {
+    async handler(req, res) {
         if (!req.params.no || !req.params.msg) {
             throw new ApiError("Tidak lengkap", 406)
         }
-        let no = `${req.params.no}@c.us`
-        return client.sendText(no, req.params.msg).then(
+        let no = `${req.params.no.replace(/\D/g, '').replace(/^0/, '62')}@c.us`
+        let msg = req.params.msg.trim();
+        if (msg.indexOf('%nama%')) {
+            let nama = '';
+            try {
+                nama = await client.getContact(no).then(
+                    v => v && v.pushname || ''
+                )
+            } catch (e) { }
+            msg = msg.replace(/%nama%/g, nama);
+        }
+        logger('Send WA', no, msg)
+        return client.sendText(no, msg).then(
             v => v != 'false'
         )
     }
