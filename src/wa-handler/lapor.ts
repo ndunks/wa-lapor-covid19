@@ -3,10 +3,6 @@ import web_api from "../web_api";
 import { AxiosError } from "axios";
 let pesan_laporan_balasan = `Terimakasih %nama% telah membantu tim satgas desa Klampok ` +
     `dalam menangani pandemik Covid-19. Laporan sudah kami terima dan tercatat pada data kami.`
-let pesan_himbauan = `Selamat siang...Sdr. %nama% kami menghimbau selama pulang berada dirumah agar anda mengisolasi diri dirumah , tidak pergi atau berkumpul dikeramaian, menjaga kebersihan diri dengan pembiasaan hidup bersih dan sehat, apabila terdapat keluhan batuk,demam, atau sesak nafas segera periksa ke puskesmas terdekat.. Mohon untuk menjadi perhatian.
-Salam Sehat
-#SATGAS COVID 19 DESA KLAMPOK
-http://klampok.id`
 
 type LaporData = { [key: string]: string } & {
     nama: string,
@@ -159,23 +155,17 @@ Keterangan: `,
         if (data.tgl_kepulangan) {
             data.tgl_kepulangan = tgl_parser(data.tgl_kepulangan);
         }
-        data.raw = msg.body
-        data.pelapor = msg.from
         if (data.no_hp) {
-            let nohp = data.no_hp.replace(/\D+/g, '').replace(/^0/, '62')
-            if (nohp.length < 11 || nohp.length > 14) {
-                logger('No hp invalid:', nohp)
-            } else {
-                data.no_hp = nohp;
-                /*                 logger('Sending himbauan to', nohp)
-                                if (await client.sendText(`${nohp}@c.us`, pesan_himbauan.replace('%nama%', data.nama))) {
-                                    data.wa_sent = 'true'
-                                } */
-            }
+            data.no_hp = data.no_hp.replace(/\D+/g, '').replace(/^62/, '0')
         }
+        data.raw = msg.body
+        data.pelapor = msg.from.replace(/^..(\d+)@c\.us$/, '0$1');
         let nama_pelapor = await client.getContact(msg.from).then(
             v => v && v.pushname
         )
+        if (nama_pelapor) {
+            data.pelapor += ` (${nama_pelapor})`;
+        }
         logger('Send Api', data)
         await web_api.lapor(data).then(
             (res) => {
